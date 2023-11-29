@@ -1,3 +1,4 @@
+[English](README_en.md)
 # monster-siren-Scrapy
 
 本项目使用Scrapy框架，爬取塞壬唱片官网所有歌曲文件。
