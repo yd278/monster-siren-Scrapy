@@ -2,13 +2,13 @@ from monster_siren.items import MonsterSirenItem
 from jsonpath import jsonpath
 import scrapy
 import json
-
+import pickle
 
 class SongsSpider(scrapy.Spider):
     name = 'songs'
     custom_settings = {
         "download_maxsize" : 0,
-        "download_warnsize" : 0,
+        "DOWNLOAD_WARNSIZE" : 0,
     }
     allowed_domains = ['hypergryph.com', 'hycdn.cn']
     start_urls = ['https://monster-siren.hypergryph.com/api/songs']
@@ -19,21 +19,39 @@ class SongsSpider(scrapy.Spider):
         :param response:
         :return:
         """
+
+        try:
+            with open("song_ids.pkl","rb") as file:
+                song_ids = pickle.load(file)
+        except FileNotFoundError:
+            song_ids = set()
+
         link_id = jsonpath(json.loads(response.text), '$..cid')
         for link in link_id:
+            if link in  song_ids:
+                continue
+            song_ids.add(link)
             url = 'https://monster-siren.hypergryph.com/api/song/' + link
             yield scrapy.Request(
                 url=url,
                 callback=self.music_url
             )
+        with open("song_ids.pkl","wb") as file:
+            pickle.dump(song_ids,file)
         
+        try:
+            with open("album_ids.pkl","rb") as file:
+                album_ids = pickle.load(file)
+        except FileNotFoundError:
+            album_ids = set()
+
         album_id = jsonpath(json.loads(response.text), '$..albumCid')
-        album_visited = []
+
         for album in album_id:
 
-            if album in album_visited:
+            if album in album_ids:
                 continue
-            album_visited.append(album)
+            album_ids.add(album)
             album_url = 'https://monster-siren.hypergryph.com/api/album/'+album+ '/data'
             # 发送请求，获取专辑封面
             yield scrapy.Request(
@@ -41,6 +59,9 @@ class SongsSpider(scrapy.Spider):
                 callback=self.album_data,
                 meta={'album_id':album}
             )
+        with open("album_ids.pkl","wb") as file:
+            pickle.dump(album_ids,file)
+        
             
         pass
 
@@ -54,7 +75,6 @@ class SongsSpider(scrapy.Spider):
         album_id = jsonpath(cache, '$..albumCid')[0]
         source_url = jsonpath(cache, '$..sourceUrl')[0]
         suffix = source_url[-3:]
-        print(suffix)
         name = jsonpath(cache, '$..name')[0]
         # 发送请求，获取音频文件
         yield scrapy.Request(
