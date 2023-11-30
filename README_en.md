@@ -19,6 +19,7 @@ This project has made the following modifications on the basis of the original `
 - Added support for downloading music in WAV format.
 - Implemented a new file structure, where songs from the same album are now stored in the same folder.
 - Added functionality to download album covers, which facilitates subsequent format conversion and adding of metadata.
+- Implemented the use of pickle to record songs that have already been downloaded, preventing redundant re-crawling. 
 - ~~Left some mysterious code untouched because, let's face it, sometimes you just tweak what you need and roll with it. Call it the art of pragmatic coding!~~
 
 ## How to Use
